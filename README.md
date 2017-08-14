@@ -15,7 +15,7 @@ The following steps will be executed.
     4. sambamba markdup
     5. GATK base quality recalibrate
     6. sambamba index
-    7. *pipeline* to call variants
+    7. Call variants using pipeline
 
 If you do not wish to call variants, comment out pipe04.sh call.
 
