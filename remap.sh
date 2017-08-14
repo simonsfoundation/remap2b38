@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export PATH=/mnt/xfs1/home/asalomatov/projects/dnanexus/bin/:/mnt/xfs1/home/asalomatov/projects/dnanexus/anaconda/jre/bin/:$PATH
+#export PATH=/mnt/xfs1/home/asalomatov/projects/dnanexus/bin/:/mnt/xfs1/home/asalomatov/projects/dnanexus/anaconda/jre/bin/:$PATH
 
 prefix=$1
 indir=$2
@@ -11,7 +11,9 @@ output_dir=$4
 rm_work_dir=$5
 mkdir -p $output_dir
 nCores=$6
-inclmk=~/projects/pipeline/ppln/include_hg38.mk
+inclmk=$7 #~/projects/pipeline/ppln/include_hg38.mk
+ppln_dir=$8
+
 #b37_genome=/mnt/xfs1/bioinfoCentos7/data/bcbio_nextgen/150617/genomes/Hsapiens/GRCh37/seq/GRCh37.fa
 #cd /mnt/ceph/users/asalomatov/regeneron_spark_pilot/resources
 #b38_genome=hg38/genome.fa
@@ -21,6 +23,10 @@ inclmk=~/projects/pipeline/ppln/include_hg38.mk
 echo "all arguments $@"
 echo "Running $prefix on $(hostname) in $workdir using $nCores cores."
 
+
+# define working directory
+# scr is specific to Flatiron Institute cluster
+# tmp, or work should work anywhere
 if [ "$working_dir" = "tmp" -o "$working_dir" = "TMP" ]
 then
     workdir=$(mktemp -d /tmp/working_XXXXXXXXXX)
@@ -43,7 +49,7 @@ function cleanup {
 trap cleanup EXIT
 
 echo "$(date) : timing for $prefix, start of samtools collate"
-make -j $nCores -f ~/projects/pipeline/ppln/collateBam.mk PREFIX=$prefix INDIR=$indir OUTDIR=$workdir SUFFIX=realigned.recal INCLMK=$inclmk
+make -j $nCores -f ${ppln_dir}/pipeline/ppln/collateBam.mk PREFIX=$prefix INDIR=$indir OUTDIR=$workdir SUFFIX=realigned.recal INCLMK=$inclmk
 ret=$?
 echo $ret
 if [ $ret -ne 0 ]; then
@@ -53,7 +59,7 @@ fi
 echo "$(date) : timing for $prefix, end of samtools collate"
 
 echo "$(date) : timing for $prefix, start of samtools fastq"
-make -j $nCores -f ~/projects/pipeline/ppln/fastq.mk PREFIX=$prefix INDIR=$workdir OUTDIR=$workdir SUFFIX=coll INCLMK=$inclmk
+make -j $nCores -f ${ppln_dir}/pipeline/ppln/fastq.mk PREFIX=$prefix INDIR=$workdir OUTDIR=$workdir SUFFIX=coll INCLMK=$inclmk
 
 echo "$(date) : timing for $prefix, end of samtools fastq"
 ret=$?
@@ -65,7 +71,7 @@ fi
 rm ${workdir}/${prefix}*.coll.bam
 
 echo "$(date) : timing for $prefix start of bwa mem"
-make -j $nCores -f ~/projects/pipeline/ppln/bwamem.mk PREFIX=$prefix INDIR=$workdir OUTDIR=$workdir SUFFIX= INCLMK=$inclmk NCORES=$nCores
+make -j $nCores -f ${ppln_dir}/pipeline/ppln/bwamem.mk PREFIX=$prefix INDIR=$workdir OUTDIR=$workdir SUFFIX= INCLMK=$inclmk NCORES=$nCores
 
 echo "$(date) : timing for $prefix end of bwa mem"
 ret=$?
@@ -77,7 +83,7 @@ fi
 rm ${workdir}/${prefix}*.read*
 
 echo "$(date) : timing for $prefix start of sambamba sort "
-make -j $nCores -f ~/projects/pipeline/ppln/sortBam.mk PREFIX=$prefix INDIR=$workdir OUTDIR=$workdir SUFFIX=bwa NCORES=$nCores INCLMK=$inclmk
+make -j $nCores -f ${ppln_dir}/pipeline/ppln/sortBam.mk PREFIX=$prefix INDIR=$workdir OUTDIR=$workdir SUFFIX=bwa NCORES=$nCores INCLMK=$inclmk
 
 echo "$(date) : timing for $prefix end of sambamba sort "
 ret=$?
@@ -89,7 +95,7 @@ fi
 rm ${workdir}/${prefix}*.bwa.bam
 
 echo "$(date) : timing for $prefix start of sambamba markdup"
-make -j $nCores -f ~/projects/pipeline/ppln/sambambaMarkDup.mk PREFIX=$prefix INDIR=$workdir OUTDIR=$workdir SUFFIX=re NCORES=$nCores INCLMK=$inclmk
+make -j $nCores -f ${ppln_dir}/pipeline/ppln/sambambaMarkDup.mk PREFIX=$prefix INDIR=$workdir OUTDIR=$workdir SUFFIX=re NCORES=$nCores INCLMK=$inclmk
 
 ret=$?
 echo $ret
@@ -101,7 +107,7 @@ echo "$(date) : timing for $prefix end of sambamba markdup"
 rm ${workdir}/${prefix}*.re.bam*
 
 echo "$(date) : timing for $prefix start of gatk BaseRecalibrator"
-make -j $nCores -f ~/projects/pipeline/ppln/baserecalibrate.mk PREFIX=$prefix INDIR=$workdir OUTDIR=$workdir SUFFIX=dp NCORES=$nCores INCLMK=$inclmk
+make -j $nCores -f ${ppln_dir}/pipeline/ppln/baserecalibrate.mk PREFIX=$prefix INDIR=$workdir OUTDIR=$workdir SUFFIX=dp NCORES=$nCores INCLMK=$inclmk
 ret=$?
 echo $ret
 if [ $ret -ne 0 ]; then
@@ -112,7 +118,7 @@ echo "$(date) : timing for $prefix end of gatk BaseRecalibrator"
 rm ${workdir}/${prefix}*.dp.bam*
 
 echo "$(date) : timing for $prefix start of sambamba index"
-make -j $nCores -f ~/projects/pipeline/ppln/sambambaIndex.mk PREFIX=$prefix INDIR=$workdir OUTDIR=$workdir SUFFIX=rclb NCORES=$nCores INCLMK=$inclmk
+make -j $nCores -f ${ppln_dir}/pipeline/ppln/sambambaIndex.mk PREFIX=$prefix INDIR=$workdir OUTDIR=$workdir SUFFIX=rclb NCORES=$nCores INCLMK=$inclmk
 ret=$?
 echo $ret
 if [ $ret -ne 0 ]; then
@@ -121,20 +127,20 @@ if [ $ret -ne 0 ]; then
 fi
 echo "$(date) : timing for $prefix end of sambamba index"
 
-echo "$(date) : timing for $prefix start of pipe03"
+echo "$(date) : timing for $prefix start of pipe04"
 
-~/projects/pipeline/ppln/pipe04.sh \
+${ppln_dir}/pipeline/ppln/pipe04.sh \
     $workdir \
     $workdir \
     $prefix \
     WG \
     0 \
     work \
-    /mnt/xfs1/home/asalomatov/projects/pipeline/ppln/include_hg38.mk \
+    ${ppln_dir}/pipeline/ppln/include_hg38.mk \
     YES \
     ,Freebayes,Platypus,HaplotypeCallerGVCF, \
     0 \
-    /mnt/xfs1/home/asalomatov/projects/pipeline/ppln \
+    ${ppln_dir} \
     $nCores \
     all \
     NO
