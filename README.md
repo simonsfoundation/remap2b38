@@ -4,7 +4,7 @@
 
 *remap2b38* contains one script *remap.sh* that can be used to remap a bam file to 
 a new reference genome, and to call variants with a choice of GATK HaplotypeCaller,
-Freebayes, and Platypus using [*pipeline*](https://github.com/simonsfoundation/pipeline.git)
+Freebayes, and Platypus using [*pipeline*](https://github.com/simonsfoundation/pipeline.git).
 
 The following steps will be executed.
 
@@ -15,13 +15,13 @@ The following steps will be executed.
     4. sambamba markdup
     5. GATK base quality recalibrate
     6. sambamba index
-    7. pipe04.sh from *pipeline* to call variants on this sample/family
+    7. pipe04.sh from _pipeline_ to call variants on this sample/family
 
 If you do not wish to call variants, comment out pipe04.sh call.
 
-##Dependences.
+### Dependences.
 
-*samtools* and *sambamba* must be in your $PATH.
+[*samtools*](http://www.htslib.org) and [*sambamba*](http://lomereiter.github.io/sambamba/) must be in your $PATH.
 
 Clone *pipeline*.
 ```
