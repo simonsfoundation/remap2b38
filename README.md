@@ -44,6 +44,7 @@ Run
    /path/to/output_dir/ \ # output directory (will be created)
    1 \ # 1/0 remove working_dir/do not remove
    8 \ # use this many cores
+   /path/to/include_hg38.mk   \ # e.g. ~/pipeline/ppln/include_hg38.mk, if you followed instructions above
    /path/to/pipeline/ppln \ # e.g. ~/, if you followed instructions above
    > /path/to/log_file.log 2>&1
 ```
