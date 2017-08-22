@@ -140,7 +140,7 @@ ${ppln_dir}/pipeline/ppln/pipe04.sh \
     YES \
     ,Freebayes,Platypus,HaplotypeCallerGVCF, \
     0 \
-    ${ppln_dir} \
+    ${ppln_dir}/pipeline/ppln/ \
     $nCores \
     all \
     NO
